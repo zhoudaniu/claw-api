@@ -148,6 +148,7 @@ nsis:
 # Portable configuration for U-disk usage
 portable:
   artifactName: ${productName}-${version}-portable.${ext}
+  # portable 不需要 NSIS installer.nsh 脚本
   # Calculate splash image for the portable installer
   # splashImage: resources/icons/icon.ico
 

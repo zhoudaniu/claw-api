@@ -9,8 +9,6 @@
   !include "nsProcess.nsh"
 !endif
 
-Var /GLOBAL clawxRollbackDir
-
 !macro customHeader
   ; Show install details by default so users can see what stage is running.
   ShowInstDetails show
@@ -200,7 +198,6 @@ FunctionEnd
     ${endIf}
 
   !ifndef BUILD_UNINSTALLER
-    StrCpy $clawxRollbackDir ""
 
     ; Release NSIS's CWD on $INSTDIR BEFORE the rename check.
     ; NSIS sets CWD to $INSTDIR in .onInit; Windows refuses to rename a directory
@@ -267,7 +264,6 @@ FunctionEnd
       CreateDirectory "$INSTDIR"
       Goto _instdir_clean
   _stale_moved:
-    StrCpy $clawxRollbackDir "$INSTDIR._stale_$R8"
     CreateDirectory "$INSTDIR"
   _instdir_clean:
 
