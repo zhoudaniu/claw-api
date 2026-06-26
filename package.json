@@ -72,6 +72,7 @@
     "package:win": "pnpm run prep:win-binaries && pnpm run package && node scripts/patch-nsis-win.mjs && node scripts/run-electron-builder.mjs --win --publish never",
     "package:win:portable": "pnpm run prep:win-binaries && pnpm run package && node scripts/run-electron-builder.mjs --win portable --publish never",
     "release": "bash scripts/release.sh",
+    "sync-version": "bash scripts/sync-version.sh",
     "package:linux": "pnpm run package && node scripts/run-electron-builder.mjs --linux --publish never",
     "release": "pnpm run uv:download && pnpm run agent-browser:download && pnpm run package && node scripts/run-electron-builder.mjs --publish always",
     "preversion": "node scripts/pre-version-fetch-tags.mjs",

@@ -30,6 +30,12 @@ if [ "$CURRENT_VERSION" != "$VERSION" ]; then
 fi
 echo "  ✅ 版本号确认: ${VERSION}"
 
+# ==================== 步骤 1.5: 同步版本文件 ====================
+echo ""
+echo "[1.5/6] 同步版本文件到 CDN 仓库..."
+bash scripts/sync-version.sh
+echo "  ✅ 版本文件已同步"
+
 # ==================== 步骤 2: 构建 ====================
 echo ""
 echo "[2/6] 构建应用..."
