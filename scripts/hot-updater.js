@@ -24,13 +24,8 @@ const path = require('path');
 const CHECK_INTERVAL_MS = 30 * 60 * 1000; // 30 分钟
 const INITIAL_DELAY_MS = 3000; // 启动后延迟 3 秒
 
-// GitHub 配置（可通过环境变量覆盖）
-const GITHUB_OWNER = process.env.HOTUPDATE_GH_OWNER || 'zhoudaniu';
-const GITHUB_REPO = process.env.HOTUPDATE_GH_REPO || 'clawx-cdn';
-const GITHUB_BRANCH = process.env.HOTUPDATE_GH_BRANCH || 'main';
-
-// CDN 基础路径（用于下载 asar 文件）
-const CDN_BASE_URL = `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}`;
+// Cloudflare Pages 配置（GitHub 仓库自动部署）
+const CDN_BASE_URL = process.env.HOTUPDATE_CDN_URL || 'https://clawx-cdn.pages.dev';
 const PLATFORM_DIR = 'win';
 const ASAR_DIR = 'asar';
 
@@ -60,6 +55,13 @@ function getCurrentVersion() {
  */
 function getResourcesPath() {
   if (app.isPackaged) {
+    // 便携模式下，resources 目录在 exe 所在目录下
+    const appRoot = path.dirname(process.execPath);
+    const portableResources = path.join(appRoot, 'resources');
+    if (fs.existsSync(portableResources)) {
+      return portableResources;
+    }
+    // 默认返回 app 所在目录
     return path.dirname(app.getAppPath());
   }
   return path.resolve(__dirname, '../..');
