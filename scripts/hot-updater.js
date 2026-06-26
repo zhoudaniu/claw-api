@@ -26,7 +26,6 @@ const INITIAL_DELAY_MS = 3000; // 启动后延迟 3 秒
 
 // Cloudflare Pages 配置（GitHub 仓库自动部署）
 const CDN_BASE_URL = process.env.HOTUPDATE_CDN_URL || 'https://clawx-cdn.pages.dev';
-const PLATFORM_DIR = 'win';
 const ASAR_DIR = 'asar';
 
 // 状态
@@ -131,102 +130,42 @@ function httpGet(url, timeout = 10000) {
 }
 
 /**
- * 从 CDN 获取 asar 目录的 latest.yml
+ * 从 CDN 获取 asar 目录的 version.json
  * @returns {Promise<object|null>} 版本信息
  */
 async function fetchAsarLatestYml() {
-  const url = `${CDN_BASE_URL}/${ASAR_DIR}/latest.yml`;
+  const url = `${CDN_BASE_URL}/${ASAR_DIR}/version.json`;
 
-  console.log(`[hot-updater] 获取 asar latest.yml: ${url}`);
+  console.log(`[hot-updater] 获取 version.json: ${url}`);
 
   try {
     const response = await httpGet(url, 10000);
 
     if (response.statusCode !== 200) {
-      console.warn(`[hot-updater] 获取 latest.yml 失败: HTTP ${response.statusCode}`);
+      console.warn(`[hot-updater] 获取 version.json 失败: HTTP ${response.statusCode}`);
       return null;
     }
 
-    // 解析 YAML（简化版，不依赖外部库）
-    const yaml = parseYaml(response.data);
+    // 解析 JSON
+    const data = JSON.parse(response.data);
 
-    if (!yaml || !yaml.version) {
-      console.warn('[hot-updater] latest.yml 格式无效');
+    if (!data || !data.version) {
+      console.warn('[hot-updater] version.json 格式无效');
       return null;
     }
 
     return {
-      version: yaml.version,
-      releaseDate: yaml.releaseDate,
-      releaseNotes: yaml.releaseNotes || '',
-      asarFile: yaml.asarFile || `clawx-${yaml.version}.asar`,
-      asarSize: yaml.asarSize || 0,
-      asarSha512: yaml.asarSha512 || '',
+      version: data.version,
+      releaseDate: data.releaseDate,
+      releaseNotes: data.releaseNotes || '',
+      asarFile: data.asarFile || `app-${data.version}.asar`,
+      asarSize: data.asarSize || 0,
+      asarSha512: data.asarSha512 || '',
     };
   } catch (error) {
-    console.warn('[hot-updater] 获取 latest.yml 网络错误:', error.message);
+    console.warn('[hot-updater] 获取 version.json 网络错误:', error.message);
     return null;
   }
-}
-
-/**
- * 简化 YAML 解析器（只解析基本格式）
- * @param {string} yamlStr - YAML 字符串
- * @returns {object} 解析后的对象
- */
-function parseYaml(yamlStr) {
-  const result = {};
-  const lines = yamlStr.split('\n');
-  let currentKey = '';
-  let currentIndent = 0;
-  const stack = [{ obj: result, indent: -1 }];
-
-  for (const line of lines) {
-    // 跳过空行和注释
-    if (!line.trim() || line.trim().startsWith('#')) continue;
-
-    const indent = line.search(/\S/);
-    const trimmedLine = line.trim();
-
-    // 处理嵌套对象
-    while (stack.length > 1 && indent <= stack[stack.length - 1].indent) {
-      stack.pop();
-    }
-
-    const currentObj = stack[stack.length - 1].obj;
-
-    if (trimmedLine.includes(':')) {
-      const colonIndex = trimmedLine.indexOf(':');
-      const key = trimmedLine.substring(0, colonIndex).trim();
-      let value = trimmedLine.substring(colonIndex + 1).trim();
-
-      // 移除引号
-      if (
-        (value.startsWith('"') && value.endsWith('"')) ||
-        (value.startsWith("'") && value.endsWith("'"))
-      ) {
-        value = value.slice(1, -1);
-      }
-
-      if (value) {
-        // 值在同行
-        currentObj[key] = value;
-      } else {
-        // 值在下一行，创建新对象
-        currentObj[key] = {};
-        stack.push({ obj: currentObj[key], indent });
-      }
-    } else if (/^-\s/.test(trimmedLine)) {
-      // 数组项
-      const value = trimmedLine.substring(1).trim();
-      if (!Array.isArray(currentObj._array)) {
-        currentObj._array = [];
-      }
-      currentObj._array.push(value);
-    }
-  }
-
-  return result;
 }
 
 /**
